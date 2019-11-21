@@ -35,6 +35,7 @@ def vrc_time_test():
     except:
         ctime = datetime.now().astimezone(timezone("Asia/Tokyo"))
         readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
+        return readable
     else:
         ctime = get_current_time(location)
         readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
