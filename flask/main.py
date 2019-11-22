@@ -4,8 +4,8 @@ import io
 import requests
 
 from pytz import timezone
-from tzwhere import tzwhere
 from datetime import datetime
+from timezonefinder import TimezoneFinder
 
 from PIL import Image, ImageDraw
 from flask_caching import Cache
@@ -18,7 +18,7 @@ config = {
     "CACHE_DEFAULT_TIMEOUT": 60*60*24*7
 }
 
-tzwhere = tzwhere.tzwhere()
+tf = TimezoneFinder()
 app = Flask(__name__)
 app.config.from_mapping(config)
 cache = Cache(app)
@@ -35,11 +35,11 @@ def vrc_time_test():
     except:
         ctime = datetime.now().astimezone(timezone("Asia/Tokyo"))
         readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
-        return readable
     else:
         ctime = get_current_time(location)
         readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
-        return "{0}, {1}, {2}".format(ip, str(location), readable)
+
+    return "ip: {0}, geo: {1} {2}, time: {3}".format(ip, location["lat"], location["lon"], readable)
 
 @app.route('/vrctime')
 def vrc_time():
@@ -65,7 +65,7 @@ def get_lat_lon(ip):
     return result
 
 def get_current_time(location):
-    timezone_str = tzwhere.tzNameAt(location["lat"], location["lon"])
+    timezone_str = tf.timezone_at(lng=location["lon"], lat=location["lat"])
     tz = timezone(timezone_str)
     now = datetime.now()
     local_now = now.astimezone(tz)
