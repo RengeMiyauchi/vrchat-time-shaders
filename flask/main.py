@@ -3,7 +3,7 @@
 import io
 import requests
 
-from pytz import timezone
+from pendulum import timezone
 from datetime import datetime
 from timezonefinder import TimezoneFinder
 
