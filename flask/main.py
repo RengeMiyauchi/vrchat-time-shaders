@@ -10,11 +10,10 @@ from timezonefinder import TimezoneFinder
 from PIL import Image, ImageDraw
 from flask_caching import Cache
 from werkzeug.wsgi import FileWrapper
-from flask import Flask, Response, request
+from flask import Flask, Response, request, redirect
 
 config = {
-    "CACHE_TYPE": "filesystem",
-    "CACHE_DIR": "/your/cache/dir/here",
+    'CACHE_TYPE': 'simple',
     "CACHE_DEFAULT_TIMEOUT": 60*60*24*7
 }
 
@@ -25,51 +24,46 @@ cache = Cache(app)
 
 @app.route('/')
 def index():
-    return 'go away'
+    return ""
 
 @app.route('/vrctime_test')
 def vrc_time_test():
-    ip = request.headers['X-Real-IP']
-    try:
-        location = get_lat_lon(ip)
-    except:
-        ctime = datetime.now().astimezone(timezone("Asia/Tokyo"))
-        readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
-    else:
-        ctime = get_current_time(location)
-        readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
+    ip = request.headers['x-appengine-user-ip']
+    #ip = request.headers['X-Real-IP']
+    ctime = get_current_time(ip)
+    readable = ctime.strftime("%m/%d/%Y, %H:%M:%S")
 
-    return "ip: {0}, geo: {1} {2}, time: {3}".format(ip, location["lat"], location["lon"], readable)
+    return "ip: {0}, time: {1}".format(ip, readable)
 
 @app.route('/vrctime')
 def vrc_time():
-    ip = request.headers['X-Real-IP']
-    try:
-        location = get_lat_lon(ip)
-    except:
-        ctime = datetime.now().astimezone(timezone("Asia/Tokyo"))
-    else:
-        ctime = get_current_time(location)
-
+    ip = request.headers['x-appengine-user-ip']
+    #ip = request.headers['X-Real-IP']
+    ctime = get_current_time(ip)
     img = generate_image(ctime)
 
     f = FileWrapper(img)
     return Response(f, mimetype="image/PNG", direct_passthrough=True)
 
 @cache.memoize(timeout=60*60*24*7)
-def get_lat_lon(ip):
+def get_geo_info(ip):
     URL = "http://ip-api.com/json/{0}?fields=lat,lon".format(ip)
     result = requests.get(url = URL).json()
     if "lat" not in result:
         raise Exception("don't cache")
     return result
 
-def get_current_time(location):
-    timezone_str = tf.timezone_at(lng=location["lon"], lat=location["lat"])
-    tz = timezone(timezone_str)
-    now = datetime.now()
-    local_now = now.astimezone(tz)
-    return local_now
+def get_current_time(ip):
+    try:
+        location = get_geo_info(ip)
+    except:
+        ctime = datetime.now().astimezone(timezone("Asia/Tokyo"))
+    else:
+        timezone_str = tf.timezone_at(lng=location["lon"], lat=location["lat"])
+        tz = timezone(timezone_str)
+        now = datetime.now()
+        ctime = now.astimezone(tz)
+    return ctime
 
 def generate_image(now):
 
@@ -125,3 +119,6 @@ def generate_image(now):
 
     return file_object
 
+if __name__ == "__main__":
+
+    app.run(host='127.0.0.1', port=8080, debug=True)

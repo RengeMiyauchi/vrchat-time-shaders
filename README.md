@@ -3,6 +3,12 @@
 
 Utility shaders to implement time-related stuffs in VRChat.
 
+## This branch
+
+I've added a simple Flask app that performs geo ip look up to get a users timezone
+that can be used for this clock shader so clocks show local time for everyone rather
+than hardcoding a timezone.
+
 ## Demo
 The demo world is available [here](https://www.vrchat.net/home/launch?worldId=wrld_3efd0dcc-1bae-44b2-bba3-996038aa11b0)!
 

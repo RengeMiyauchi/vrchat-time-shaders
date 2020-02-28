@@ -1,0 +1,6 @@
+requests==2.23.0
+Flask==1.1.1
+flask_caching==1.8.0
+pendulum==2.0.5
+timezonefinder==4.2.0
+pillow==7.0.0
